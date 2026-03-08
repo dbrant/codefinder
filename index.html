@@ -39,7 +39,7 @@ html, body {
 /* ---- Grid Area ---- */
 #grid-area {
   flex: 1;
-  overflow: auto;
+  overflow: hidden;
   position: relative;
   padding: 12px;
 }
@@ -89,10 +89,27 @@ html, body {
 #drop-zone label:hover { background: #c73550; }
 #drop-zone input[type="file"] { display: none; }
 
-/* ---- Text Grid ---- */
+/* ---- Text Grid (virtual scroll) ---- */
 #grid-container {
   position: relative;
   display: none;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#grid-spacer {
+  /* Tall invisible div that creates the correct scrollbar size */
+  width: 1px;
+  pointer-events: none;
+}
+
+#grid-viewport {
+  position: sticky;
+  top: 0;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
 }
 
 #grid-canvas {
@@ -111,9 +128,12 @@ html, body {
   color: var(--grid-text);
   word-break: break-all;
   white-space: pre-wrap;
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
   z-index: 1;
   user-select: none;
+  pointer-events: auto;
 }
 
 #text-grid .els-char {
@@ -316,8 +336,11 @@ html, body {
       </label>
     </div>
     <div id="grid-container">
-      <canvas id="grid-canvas"></canvas>
-      <div id="text-grid"></div>
+      <div id="grid-viewport">
+        <canvas id="grid-canvas"></canvas>
+        <div id="text-grid"></div>
+      </div>
+      <div id="grid-spacer"></div>
     </div>
   </div>
 
@@ -366,6 +389,8 @@ html, body {
   const fileInput = document.getElementById('file-input');
   const gridArea = document.getElementById('grid-area');
   const gridContainer = document.getElementById('grid-container');
+  const gridViewport = document.getElementById('grid-viewport');
+  const gridSpacer = document.getElementById('grid-spacer');
   const textGrid = document.getElementById('text-grid');
   const canvas = document.getElementById('grid-canvas');
   const ctx = canvas.getContext('2d');
@@ -382,11 +407,21 @@ html, body {
   // ---- State ----
   let cleanedText = '';       // letters only, uppercased
   let originalChars = [];     // array of original (cleaned) characters for display
-  let charSpans = [];         // DOM span references
   let gridCols = 0;
+  let totalRows = 0;
+  let rowHeight = 0;          // measured px height of one row
+  let charWidth = 0;          // measured px width of one character
   let currentResults = [];
   let activeResultIndex = -1;
+  let highlightedIndices = new Set(); // char indices to highlight
   let searchAbort = null;
+
+  // Virtual scroll state
+  let renderedFirstRow = -1;
+  let renderedLastRow = -1;
+  let renderScheduled = false;
+  // Map from char index -> span element (only for currently rendered chars)
+  let charSpanMap = new Map();
 
   // ---- File loading ----
 
@@ -421,9 +456,11 @@ html, body {
 
   // ---- Text processing ----
 
-  // Strip everything that isn't a Unicode letter
+  function isLetter(ch) {
+    return /\p{Letter}/u.test(ch);
+  }
+
   function stripToLetters(text) {
-    // Match Unicode letters (L category) — covers all scripts
     const result = [];
     for (const char of text) {
       if (isLetter(char)) {
@@ -431,11 +468,6 @@ html, body {
       }
     }
     return result;
-  }
-
-  function isLetter(ch) {
-    // Use Unicode-aware regex
-    return /\p{Letter}/u.test(ch);
   }
 
   function processText(raw, filename) {
@@ -449,44 +481,104 @@ html, body {
     dropZone.classList.add('hidden');
     gridContainer.style.display = 'block';
 
-    renderGrid();
+    measureFont();
+    setupGrid();
     clearResults();
   }
 
-  // ---- Grid rendering ----
+  // ---- Font measurement ----
 
-  function computeGridCols() {
-    // Measure how many monospace chars fit in the grid area width
-    const areaWidth = gridArea.clientWidth - 24; // padding
-    // Create a temp span to measure char width
+  function measureFont() {
     const tmp = document.createElement('span');
     tmp.style.fontFamily = "'Consolas', 'Courier New', 'Liberation Mono', monospace";
     tmp.style.fontSize = '14px';
+    tmp.style.lineHeight = '1.5';
     tmp.style.letterSpacing = '2px';
     tmp.style.position = 'absolute';
     tmp.style.visibility = 'hidden';
-    tmp.textContent = 'M';
+    tmp.style.whiteSpace = 'pre';
+    tmp.textContent = 'M\nM';
     document.body.appendChild(tmp);
-    const charWidth = tmp.getBoundingClientRect().width;
+    const rect = tmp.getBoundingClientRect();
+    charWidth = rect.width;  // single char width (with letter-spacing)
+    rowHeight = rect.height / 2;
     document.body.removeChild(tmp);
+  }
+
+  // ---- Virtual-scrolled grid ----
+
+  function computeGridCols() {
+    const areaWidth = gridArea.clientWidth - 24; // account for padding
     return Math.max(1, Math.floor(areaWidth / charWidth));
   }
 
-  function renderGrid() {
+  function setupGrid() {
     gridCols = computeGridCols();
-    charSpans = [];
+    totalRows = Math.ceil(originalChars.length / gridCols);
 
-    // Build the grid using a document fragment for performance
+    // Set spacer height to represent the full virtual document
+    const totalHeight = totalRows * rowHeight;
+    gridSpacer.style.height = totalHeight + 'px';
+
+    // Size the viewport and canvas to the visible area
+    const viewH = gridContainer.clientHeight;
+    canvas.width = gridContainer.clientWidth;
+    canvas.height = viewH;
+
+    // Reset virtual scroll state
+    renderedFirstRow = -1;
+    renderedLastRow = -1;
+    charSpanMap.clear();
+    textGrid.innerHTML = '';
+
+    // Scroll to top
+    gridContainer.scrollTop = 0;
+
+    // Initial render
+    renderVisibleRows();
+  }
+
+  function renderVisibleRows() {
+    renderScheduled = false;
+
+    const scrollTop = gridContainer.scrollTop;
+    const viewH = gridContainer.clientHeight;
+
+    // Which rows are visible?
+    const bufferRows = 5; // render a few extra rows above/below for smooth scrolling
+    let firstRow = Math.floor(scrollTop / rowHeight) - bufferRows;
+    let lastRow = Math.ceil((scrollTop + viewH) / rowHeight) + bufferRows;
+    firstRow = Math.max(0, firstRow);
+    lastRow = Math.min(totalRows - 1, lastRow);
+
+    // Skip re-render if the visible range hasn't changed
+    if (firstRow === renderedFirstRow && lastRow === renderedLastRow) {
+      // Still need to update the text-grid offset and redraw canvas overlay
+      updateGridPosition(scrollTop);
+      drawHighlightOverlay(scrollTop);
+      return;
+    }
+
+    renderedFirstRow = firstRow;
+    renderedLastRow = lastRow;
+
+    // Build only the visible rows
     const fragment = document.createDocumentFragment();
+    charSpanMap.clear();
 
-    for (let i = 0; i < originalChars.length; i++) {
+    const startIdx = firstRow * gridCols;
+    const endIdx = Math.min((lastRow + 1) * gridCols, originalChars.length);
+
+    for (let i = startIdx; i < endIdx; i++) {
       const span = document.createElement('span');
       span.textContent = originalChars[i];
-      span.dataset.index = i;
-      charSpans.push(span);
+      if (highlightedIndices.has(i)) {
+        span.className = 'els-char';
+      }
+      charSpanMap.set(i, span);
       fragment.appendChild(span);
 
-      // Insert line break at end of each row
+      // Line break at end of each row
       if ((i + 1) % gridCols === 0) {
         fragment.appendChild(document.createTextNode('\n'));
       }
@@ -495,23 +587,35 @@ html, body {
     textGrid.innerHTML = '';
     textGrid.appendChild(fragment);
 
-    // Resize canvas to match
-    requestAnimationFrame(() => {
-      canvas.width = gridContainer.scrollWidth;
-      canvas.height = gridContainer.scrollHeight;
-    });
+    updateGridPosition(scrollTop);
+    drawHighlightOverlay(scrollTop);
   }
 
-  // Re-render on resize
+  function updateGridPosition(scrollTop) {
+    // Position the text-grid so that the rendered rows appear at the correct
+    // offset within the sticky viewport.
+    const offset = renderedFirstRow * rowHeight - scrollTop;
+    textGrid.style.transform = `translateY(${offset}px)`;
+  }
+
+  // Schedule a render on scroll (throttled to rAF)
+  gridContainer.addEventListener('scroll', () => {
+    if (!renderScheduled) {
+      renderScheduled = true;
+      requestAnimationFrame(renderVisibleRows);
+    }
+  }, { passive: true });
+
+  // Re-layout on resize
   let resizeTimer;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
       if (originalChars.length > 0) {
-        renderGrid();
-        // Re-highlight active result if any
+        measureFont();
+        setupGrid();
         if (activeResultIndex >= 0 && currentResults[activeResultIndex]) {
-          highlightResult(currentResults[activeResultIndex]);
+          scrollToResult(currentResults[activeResultIndex]);
         }
       }
     }, 200);
@@ -590,23 +694,19 @@ html, body {
       const textLen = text.length;
       const needleChars = Array.from(needle);
 
-      // Search both forward (+skip) and reverse (-skip)
       let currentSkip = minS;
-      const totalSkips = (maxS - minS + 1) * 2; // forward + reverse
+      const totalSkips = (maxS - minS + 1) * 2;
       let processed = 0;
 
       function chunk() {
         if (abort.abort) { resolve([]); return; }
 
-        const chunkSize = 50; // skips per frame
+        const chunkSize = 50;
         let count = 0;
 
         while (currentSkip <= maxS && count < chunkSize) {
-          // Forward search
           searchWithSkip(text, textLen, needleChars, needleLen, currentSkip, results);
-          // Reverse search (negative skip)
           searchWithSkip(text, textLen, needleChars, needleLen, -currentSkip, results);
-
           currentSkip++;
           count++;
           processed += 2;
@@ -615,7 +715,6 @@ html, body {
         progressFill.style.width = Math.min(100, (processed / totalSkips) * 100) + '%';
 
         if (currentSkip > maxS) {
-          // Sort results by absolute skip value
           results.sort((a, b) => Math.abs(a.skip) - Math.abs(b.skip));
           resolve(results);
         } else {
@@ -672,77 +771,112 @@ html, body {
   }
 
   function clearHighlight() {
-    // Remove highlight classes
-    textGrid.querySelectorAll('.els-char').forEach(el => {
-      el.classList.remove('els-char');
-    });
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    highlightedIndices.clear();
+    // Force re-render to remove highlight classes
+    renderedFirstRow = -1;
+    renderedLastRow = -1;
+    renderVisibleRows();
   }
 
   function selectResult(idx) {
     if (idx === activeResultIndex) return;
 
-    // Update active li
     const lis = resultsList.querySelectorAll('li');
     lis.forEach(li => li.classList.remove('active'));
     if (lis[idx]) lis[idx].classList.add('active');
 
     activeResultIndex = idx;
-    highlightResult(currentResults[idx]);
+    const result = currentResults[idx];
+
+    // Update highlighted indices
+    highlightedIndices.clear();
+    for (const i of result.indices) {
+      highlightedIndices.add(i);
+    }
+
+    scrollToResult(result);
   }
 
-  function highlightResult(result) {
-    clearHighlight();
+  function scrollToResult(result) {
+    // Find the row range that contains this result
+    const minIdx = Math.min(...result.indices);
+    const maxIdx = Math.max(...result.indices);
+    const firstResultRow = Math.floor(minIdx / gridCols);
+    const lastResultRow = Math.floor(maxIdx / gridCols);
 
-    // Resize canvas
-    canvas.width = gridContainer.scrollWidth;
-    canvas.height = gridContainer.scrollHeight;
+    // Try to center the result vertically
+    const viewH = gridContainer.clientHeight;
+    const visibleRows = Math.floor(viewH / rowHeight);
+    const midRow = Math.floor((firstResultRow + lastResultRow) / 2);
+    let targetScroll = (midRow - Math.floor(visibleRows / 2)) * rowHeight;
+    targetScroll = Math.max(0, Math.min(targetScroll, gridContainer.scrollHeight - viewH));
 
-    const spans = [];
-    for (const i of result.indices) {
-      if (charSpans[i]) {
-        charSpans[i].classList.add('els-char');
-        spans.push(charSpans[i]);
-      }
+    gridContainer.scrollTop = targetScroll;
+
+    // Force re-render with new highlights
+    renderedFirstRow = -1;
+    renderedLastRow = -1;
+    renderVisibleRows();
+  }
+
+  // ---- Canvas highlight overlay ----
+
+  function drawHighlightOverlay(scrollTop) {
+    const viewW = gridContainer.clientWidth;
+    const viewH = gridContainer.clientHeight;
+    canvas.width = viewW;
+    canvas.height = viewH;
+    ctx.clearRect(0, 0, viewW, viewH);
+
+    if (highlightedIndices.size === 0) return;
+
+    // Collect the pixel positions of highlighted chars in viewport coordinates
+    const points = [];
+    // Sort indices so lines connect in sequence
+    const sortedIndices = Array.from(highlightedIndices).sort((a, b) => {
+      // Maintain the order from the result (first to last in the sequence)
+      return 0; // We'll use the result's indices order instead
+    });
+
+    // Use the active result's index order for line drawing
+    let orderedIndices = [];
+    if (activeResultIndex >= 0 && currentResults[activeResultIndex]) {
+      orderedIndices = currentResults[activeResultIndex].indices;
     }
 
-    // Draw connecting lines on canvas
-    if (spans.length > 1) {
-      ctx.strokeStyle = 'rgba(233, 69, 96, 0.7)';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([4, 3]);
-      ctx.beginPath();
+    for (const idx of orderedIndices) {
+      const row = Math.floor(idx / gridCols);
+      const col = idx % gridCols;
 
-      const gridRect = textGrid.getBoundingClientRect();
-      const containerRect = gridContainer.getBoundingClientRect();
+      // Convert to viewport pixel coordinates
+      const x = col * charWidth + charWidth / 2;
+      const y = row * rowHeight + rowHeight / 2 - scrollTop;
 
-      for (let i = 0; i < spans.length; i++) {
-        const rect = spans[i].getBoundingClientRect();
-        const x = rect.left - containerRect.left + rect.width / 2;
-        const y = rect.top - containerRect.top + rect.height / 2;
+      points.push({ x, y, visible: y >= -rowHeight && y <= viewH + rowHeight });
+    }
 
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      }
-      ctx.stroke();
+    if (points.length < 2) return;
 
-      // Draw dots at each letter
-      ctx.setLineDash([]);
-      ctx.fillStyle = 'rgba(233, 69, 96, 0.9)';
-      for (const span of spans) {
-        const rect = span.getBoundingClientRect();
-        const x = rect.left - containerRect.left + rect.width / 2;
-        const y = rect.top - containerRect.top + rect.height / 2;
+    // Draw connecting lines
+    ctx.strokeStyle = 'rgba(233, 69, 96, 0.7)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i++) {
+      ctx.lineTo(points[i].x, points[i].y);
+    }
+    ctx.stroke();
+
+    // Draw dots at each visible letter position
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(233, 69, 96, 0.9)';
+    for (const p of points) {
+      if (p.visible) {
         ctx.beginPath();
-        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
         ctx.fill();
       }
-    }
-
-    // Scroll first highlighted char into view
-    if (spans[0]) {
-      spans[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }
 
