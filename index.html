@@ -16,7 +16,6 @@
   --text-dim: #8888aa;
   --accent: #e94560;
   --grid-text: #c8c8d8;
-  --grid-highlight: #ffdd57;
   --border: #2a2a4a;
   --scrollbar-w: 10px;
 }
@@ -95,7 +94,6 @@ html, body {
   left: 0;
 }
 
-/* Custom scrollbar */
 #scrollbar-track {
   position: absolute;
   top: 0;
@@ -119,9 +117,7 @@ html, body {
   transition: background 0.15s;
 }
 #scrollbar-thumb:hover,
-#scrollbar-thumb.dragging {
-  background: #4a4a6a;
-}
+#scrollbar-thumb.dragging { background: #4a4a6a; }
 #scrollbar-thumb.dragging { cursor: grabbing; }
 
 /* ---- Control Panel ---- */
@@ -135,74 +131,23 @@ html, body {
   overflow: hidden;
 }
 
-#panel h1 {
-  font-size: 1.2rem;
+#panel-header {
   padding: 16px 20px;
   border-bottom: 1px solid var(--border);
+}
+
+#panel-header h1 {
+  font-size: 1.2rem;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-#panel h1 span.subtitle {
+#panel-header h1 span.subtitle {
   font-size: 0.7rem;
   color: var(--text-dim);
   font-weight: normal;
 }
-
-.panel-section {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-}
-
-.panel-section h2 {
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--text-dim);
-  margin-bottom: 12px;
-}
-
-.panel-section label {
-  display: block;
-  font-size: 0.8rem;
-  color: var(--text-dim);
-  margin-bottom: 4px;
-}
-
-.panel-section input[type="text"],
-.panel-section input[type="number"] {
-  width: 100%;
-  padding: 8px 10px;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  color: var(--text);
-  font-size: 0.95rem;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.panel-section input:focus { border-color: var(--accent); }
-
-.spacing-row { display: flex; gap: 10px; }
-.spacing-row > div { flex: 1; }
-
-#search-btn {
-  width: 100%;
-  margin-top: 12px;
-  padding: 10px;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-#search-btn:hover { background: #c73550; }
-#search-btn:disabled { background: #555; cursor: not-allowed; }
 
 #file-info {
   font-size: 0.8rem;
@@ -211,71 +156,196 @@ html, body {
   border-bottom: 1px solid var(--border);
 }
 
-/* ---- Results ---- */
-#results-area { flex: 1; overflow-y: auto; padding: 0; }
+/* ---- Search cards area (scrollable) ---- */
+#searches-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
 
-#results-area h2 {
+#add-search-btn {
+  display: block;
+  width: calc(100% - 40px);
+  margin: 12px 20px;
+  padding: 8px;
+  background: var(--bg-input);
+  color: var(--text-dim);
+  border: 1px dashed var(--border);
+  border-radius: 4px;
   font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--text-dim);
-  padding: 16px 20px 8px;
-}
-
-#results-status {
-  padding: 4px 20px 8px;
-  font-size: 0.8rem;
-  color: var(--text-dim);
-}
-
-#results-list { list-style: none; }
-
-#results-list li {
-  padding: 10px 20px;
   cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+#add-search-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+#add-search-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ---- Individual search card ---- */
+.search-card {
   border-bottom: 1px solid var(--border);
+}
+
+.search-card-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 20px;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
   transition: background 0.15s;
+}
+.search-card-header:hover { background: rgba(255,255,255,0.03); }
+
+.search-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.search-card-title {
+  flex: 1;
   font-size: 0.9rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-#results-list li:hover { background: rgba(233, 69, 96, 0.1); }
-
-#results-list li.active {
-  background: rgba(233, 69, 96, 0.2);
-  border-left: 3px solid var(--accent);
-}
-
-#results-list li .result-word {
-  font-family: 'Consolas', monospace;
-  font-weight: bold;
-  color: var(--grid-highlight);
-  letter-spacing: 1px;
-}
-
-#results-list li .result-detail {
+.search-card-count {
   font-size: 0.75rem;
   color: var(--text-dim);
-  margin-top: 2px;
+  flex-shrink: 0;
 }
 
-/* ---- Progress ---- */
-#progress-bar-container { display: none; padding: 8px 20px; }
-#progress-bar-container.visible { display: block; }
+.search-card-remove {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 0 4px;
+  line-height: 1;
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+.search-card-remove:hover { color: var(--accent); }
 
-#progress-bar {
+.search-card-body {
+  padding: 0 20px 12px;
+  display: none;
+}
+.search-card.expanded .search-card-body { display: block; }
+
+.search-card-body label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+
+.search-card-body input[type="text"],
+.search-card-body input[type="number"] {
   width: 100%;
-  height: 6px;
+  padding: 6px 8px;
   background: var(--bg-input);
-  border-radius: 3px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.search-card-body input:focus { border-color: var(--accent); }
+
+.search-card-body .spacing-row { display: flex; gap: 8px; margin-top: 8px; }
+.search-card-body .spacing-row > div { flex: 1; }
+
+.search-card-body .card-search-btn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 7px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.search-card-body .card-search-btn:hover { background: #c73550; }
+.search-card-body .card-search-btn:disabled { background: #555; cursor: not-allowed; }
+
+.search-card-body .card-progress {
+  display: none;
+  margin-top: 6px;
+  height: 4px;
+  background: var(--bg-input);
+  border-radius: 2px;
   overflow: hidden;
 }
-#progress-bar-fill {
+.search-card-body .card-progress.visible { display: block; }
+.search-card-body .card-progress-fill {
   height: 100%;
   width: 0%;
   background: var(--accent);
-  border-radius: 3px;
+  border-radius: 2px;
   transition: width 0.1s;
 }
+
+.search-card-body .card-status {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin-top: 6px;
+}
+
+/* ---- Results within a card ---- */
+.search-card-results {
+  list-style: none;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 6px;
+}
+
+.search-card-results li {
+  padding: 6px 0;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: background 0.1s;
+  font-size: 0.85rem;
+}
+
+.search-card-results li:hover { background: rgba(255,255,255,0.04); }
+
+.search-card-results li.active {
+  background: rgba(255,255,255,0.08);
+}
+
+.search-card-results li .result-word {
+  font-family: 'Consolas', monospace;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.search-card-results li .result-detail {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  margin-top: 1px;
+}
+
+/* Scrollbar styling for panel */
+#searches-area::-webkit-scrollbar,
+.search-card-results::-webkit-scrollbar { width: 6px; }
+#searches-area::-webkit-scrollbar-track,
+.search-card-results::-webkit-scrollbar-track { background: transparent; }
+#searches-area::-webkit-scrollbar-thumb,
+.search-card-results::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 </style>
 </head>
 <body>
@@ -299,37 +369,12 @@ html, body {
   </div>
 
   <div id="panel">
-    <h1>ELS Code Finder <span class="subtitle">Equidistant Letter Sequences</span></h1>
-
+    <div id="panel-header">
+      <h1>ELS Code Finder <span class="subtitle">Equidistant Letter Sequences</span></h1>
+    </div>
     <div id="file-info">No file loaded.</div>
-
-    <div class="panel-section">
-      <h2>Search</h2>
-      <label for="search-term">Search term</label>
-      <input type="text" id="search-term" placeholder="e.g. HELLO" autocomplete="off">
-
-      <div class="spacing-row" style="margin-top: 12px;">
-        <div>
-          <label for="min-skip">Min spacing</label>
-          <input type="number" id="min-skip" value="2" min="1">
-        </div>
-        <div>
-          <label for="max-skip">Max spacing</label>
-          <input type="number" id="max-skip" value="1000" min="1">
-        </div>
-      </div>
-
-      <button id="search-btn" disabled>Search</button>
-    </div>
-
-    <div id="progress-bar-container">
-      <div id="progress-bar"><div id="progress-bar-fill"></div></div>
-    </div>
-
-    <div id="results-area">
-      <h2>Results</h2>
-      <div id="results-status">Load a file and search to see results.</div>
-      <ul id="results-list"></ul>
+    <div id="searches-area">
+      <button id="add-search-btn" disabled>+ Add Search</button>
     </div>
   </div>
 </div>
@@ -348,14 +393,20 @@ html, body {
   const scrollTrack = document.getElementById('scrollbar-track');
   const scrollThumb = document.getElementById('scrollbar-thumb');
   const fileInfo = document.getElementById('file-info');
-  const searchTerm = document.getElementById('search-term');
-  const minSkipEl = document.getElementById('min-skip');
-  const maxSkipEl = document.getElementById('max-skip');
-  const searchBtn = document.getElementById('search-btn');
-  const resultsList = document.getElementById('results-list');
-  const resultsStatus = document.getElementById('results-status');
-  const progressContainer = document.getElementById('progress-bar-container');
-  const progressFill = document.getElementById('progress-bar-fill');
+  const searchesArea = document.getElementById('searches-area');
+  const addSearchBtn = document.getElementById('add-search-btn');
+
+  // ---- Color palette for searches ----
+  const COLORS = [
+    { bg: 'rgba(233, 69, 96, 0.25)',  text: '#ff6b81',  line: 'rgba(233, 69, 96, 0.7)',  dot: '#e94560'  },
+    { bg: 'rgba(87, 200, 255, 0.25)', text: '#57c8ff',  line: 'rgba(87, 200, 255, 0.7)', dot: '#57c8ff'  },
+    { bg: 'rgba(80, 220, 100, 0.25)', text: '#50dc64',  line: 'rgba(80, 220, 100, 0.7)', dot: '#50dc64'  },
+    { bg: 'rgba(255, 200, 50, 0.25)', text: '#ffc832',  line: 'rgba(255, 200, 50, 0.7)', dot: '#ffc832'  },
+    { bg: 'rgba(200, 120, 255, 0.25)',text: '#c878ff',  line: 'rgba(200, 120, 255, 0.7)',dot: '#c878ff'  },
+    { bg: 'rgba(255, 150, 80, 0.25)', text: '#ff9650',  line: 'rgba(255, 150, 80, 0.7)', dot: '#ff9650'  },
+    { bg: 'rgba(100, 255, 218, 0.25)',text: '#64ffda',  line: 'rgba(100, 255, 218, 0.7)',dot: '#64ffda'  },
+    { bg: 'rgba(255, 120, 200, 0.25)',text: '#ff78c8',  line: 'rgba(255, 120, 200, 0.7)',dot: '#ff78c8'  },
+  ];
 
   // ---- State ----
   let cleanedText = '';
@@ -365,15 +416,20 @@ html, body {
   let rowHeight = 0;
   let cellWidth = 0;
   let baselineOffset = 0;
-  let visibleRows = 0;       // how many rows fit in the viewport
-  let scrollRow = 0;          // logical scroll position (fractional top row)
-  let maxScrollRow = 0;       // max value for scrollRow
-  let currentResults = [];
-  let activeResultIndex = -1;
-  let highlightedIndices = new Set();
-  let searchAbort = null;
+  let visibleRows = 0;
+  let scrollRow = 0;
+  let maxScrollRow = 0;
   let renderScheduled = false;
   let dpr = 1;
+
+  // Multi-search state
+  let nextSearchId = 0;
+  let searches = [];          // array of search objects
+  // Merged highlight map: charIndex -> { color } for rendering
+  let highlightMap = new Map();
+  // Active (focused) result for line drawing
+  let activeSearchId = -1;
+  let activeResultIdx = -1;
 
   // Scrollbar drag state
   let thumbDragging = false;
@@ -422,14 +478,23 @@ html, body {
     cleanedText = originalChars.map(c => c.toUpperCase()).join('');
 
     fileInfo.textContent = `${filename} \u2014 ${originalChars.length.toLocaleString()} letters`;
-    searchBtn.disabled = false;
+    addSearchBtn.disabled = false;
 
     dropZone.classList.add('hidden');
     gridContainer.style.display = 'block';
 
+    // Clear all existing searches
+    searches.forEach(s => { if (s.abort) s.abort.abort = true; });
+    searches = [];
+    activeSearchId = -1;
+    activeResultIdx = -1;
+    rebuildSearchCards();
+
     measureFont();
     setupGrid();
-    clearResults();
+
+    // Auto-add the first search card
+    addSearch();
   }
 
   // ---- Font measurement ----
@@ -452,8 +517,7 @@ html, body {
   // ---- Grid setup ----
 
   function computeGridCols() {
-    // Reserve scrollbar width
-    const areaWidth = gridArea.clientWidth - 24 - 12; // padding + scrollbar
+    const areaWidth = gridArea.clientWidth - 24 - 12;
     return Math.max(1, Math.floor(areaWidth / cellWidth));
   }
 
@@ -461,15 +525,13 @@ html, body {
     gridCols = computeGridCols();
     totalRows = Math.ceil(originalChars.length / gridCols);
 
-    const viewW = gridContainer.clientWidth - 12; // minus scrollbar
+    const viewW = gridContainer.clientWidth - 12;
     const viewH = gridContainer.clientHeight;
     visibleRows = viewH / rowHeight;
     maxScrollRow = Math.max(0, totalRows - visibleRows);
 
-    // Clamp current scroll
     scrollRow = Math.min(scrollRow, maxScrollRow);
 
-    // Size canvas (CSS px)
     canvas.style.width = viewW + 'px';
     canvas.style.height = viewH + 'px';
     canvas.width = viewW * dpr;
@@ -480,7 +542,7 @@ html, body {
     scheduleRender();
   }
 
-  // ---- Logical scroll helpers ----
+  // ---- Scroll helpers ----
 
   function setScrollRow(row) {
     scrollRow = Math.max(0, Math.min(row, maxScrollRow));
@@ -493,21 +555,16 @@ html, body {
   function updateScrollbar() {
     if (totalRows <= 0) return;
     const trackH = scrollTrack.clientHeight;
-
-    // Thumb height proportional to visible fraction, min 24px
     const thumbH = Math.max(24, (visibleRows / totalRows) * trackH);
     scrollThumb.style.height = thumbH + 'px';
 
-    // Thumb position
     const scrollable = trackH - thumbH;
     const ratio = maxScrollRow > 0 ? scrollRow / maxScrollRow : 0;
     scrollThumb.style.top = (ratio * scrollable) + 'px';
 
-    // Hide scrollbar if everything fits
     scrollTrack.style.display = totalRows <= visibleRows ? 'none' : '';
   }
 
-  // Thumb drag
   scrollThumb.addEventListener('pointerdown', (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -524,10 +581,8 @@ html, body {
     const thumbH = scrollThumb.clientHeight;
     const scrollable = trackH - thumbH;
     if (scrollable <= 0) return;
-
     const dy = e.clientY - thumbDragStartY;
-    const rowDelta = (dy / scrollable) * maxScrollRow;
-    setScrollRow(thumbDragStartRow + rowDelta);
+    setScrollRow(thumbDragStartRow + (dy / scrollable) * maxScrollRow);
   });
 
   scrollThumb.addEventListener('pointerup', () => {
@@ -535,25 +590,18 @@ html, body {
     scrollThumb.classList.remove('dragging');
   });
 
-  // Click on track (jump to position)
   scrollTrack.addEventListener('pointerdown', (e) => {
     if (e.target === scrollThumb) return;
     const trackRect = scrollTrack.getBoundingClientRect();
-    const clickY = e.clientY - trackRect.top;
-    const trackH = trackRect.height;
-    const ratio = clickY / trackH;
+    const ratio = (e.clientY - trackRect.top) / trackRect.height;
     setScrollRow(ratio * maxScrollRow);
   });
 
-  // Mouse wheel on the grid area
   gridContainer.addEventListener('wheel', (e) => {
     e.preventDefault();
-    // deltaY in pixels -> convert to rows (3 rows per "click")
-    const rowDelta = (e.deltaY / 100) * 3;
-    setScrollRow(scrollRow + rowDelta);
+    setScrollRow(scrollRow + (e.deltaY / 100) * 3);
   }, { passive: false });
 
-  // Keyboard scrolling when grid area is focused/hovered
   gridContainer.setAttribute('tabindex', '0');
   gridContainer.style.outline = 'none';
   gridContainer.addEventListener('keydown', (e) => {
@@ -568,177 +616,253 @@ html, body {
     }
   });
 
-  // ---- Rendering ----
+  // ---- Multi-search management ----
 
-  function scheduleRender() {
-    if (!renderScheduled) {
-      renderScheduled = true;
-      requestAnimationFrame(renderFrame);
+  addSearchBtn.addEventListener('click', () => addSearch());
+
+  function addSearch() {
+    const id = nextSearchId++;
+    const colorIdx = searches.length % COLORS.length;
+    const search = {
+      id,
+      color: COLORS[colorIdx],
+      colorIdx,
+      term: '',
+      minSkip: 2,
+      maxSkip: 1000,
+      results: [],
+      abort: null,
+      expanded: true,
+      // DOM refs filled by buildCard
+      dom: {}
+    };
+    searches.push(search);
+    buildCard(search);
+    return search;
+  }
+
+  function removeSearch(id) {
+    const idx = searches.findIndex(s => s.id === id);
+    if (idx < 0) return;
+    const search = searches[idx];
+    if (search.abort) search.abort.abort = true;
+    if (search.dom.card) search.dom.card.remove();
+    searches.splice(idx, 1);
+
+    if (activeSearchId === id) {
+      activeSearchId = -1;
+      activeResultIdx = -1;
+    }
+
+    rebuildHighlightMap();
+    scheduleRender();
+  }
+
+  function buildCard(search) {
+    const card = document.createElement('div');
+    card.className = 'search-card expanded';
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'search-card-header';
+
+    const dot = document.createElement('div');
+    dot.className = 'search-color-dot';
+    dot.style.background = search.color.dot;
+
+    const title = document.createElement('div');
+    title.className = 'search-card-title';
+    title.textContent = 'New search';
+
+    const count = document.createElement('div');
+    count.className = 'search-card-count';
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'search-card-remove';
+    removeBtn.innerHTML = '&times;';
+    removeBtn.title = 'Remove search';
+    removeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      removeSearch(search.id);
+    });
+
+    header.append(dot, title, count, removeBtn);
+    header.addEventListener('click', () => {
+      search.expanded = !search.expanded;
+      card.classList.toggle('expanded', search.expanded);
+    });
+
+    // Body
+    const body = document.createElement('div');
+    body.className = 'search-card-body';
+
+    const termLabel = document.createElement('label');
+    termLabel.textContent = 'Search term';
+    const termInput = document.createElement('input');
+    termInput.type = 'text';
+    termInput.placeholder = 'e.g. HELLO';
+    termInput.autocomplete = 'off';
+
+    const spacingRow = document.createElement('div');
+    spacingRow.className = 'spacing-row';
+
+    const minDiv = document.createElement('div');
+    const minLabel = document.createElement('label');
+    minLabel.textContent = 'Min spacing';
+    const minInput = document.createElement('input');
+    minInput.type = 'number';
+    minInput.value = '2';
+    minInput.min = '1';
+    minDiv.append(minLabel, minInput);
+
+    const maxDiv = document.createElement('div');
+    const maxLabel = document.createElement('label');
+    maxLabel.textContent = 'Max spacing';
+    const maxInput = document.createElement('input');
+    maxInput.type = 'number';
+    maxInput.value = '1000';
+    maxInput.min = '1';
+    maxDiv.append(maxLabel, maxInput);
+
+    spacingRow.append(minDiv, maxDiv);
+
+    const searchButton = document.createElement('button');
+    searchButton.className = 'card-search-btn';
+    searchButton.textContent = 'Search';
+
+    const progress = document.createElement('div');
+    progress.className = 'card-progress';
+    const progressFill = document.createElement('div');
+    progressFill.className = 'card-progress-fill';
+    progress.appendChild(progressFill);
+
+    const status = document.createElement('div');
+    status.className = 'card-status';
+
+    const resultsList = document.createElement('ul');
+    resultsList.className = 'search-card-results';
+
+    body.append(termLabel, termInput, spacingRow, searchButton, progress, status, resultsList);
+
+    card.append(header, body);
+
+    // Insert before the add button
+    searchesArea.insertBefore(card, addSearchBtn);
+
+    // Store DOM refs
+    search.dom = { card, title, count, termInput, minInput, maxInput, searchButton, progress, progressFill, status, resultsList };
+
+    // Events
+    searchButton.addEventListener('click', () => runSearch(search));
+    termInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') runSearch(search);
+    });
+
+    // Focus the term input
+    termInput.focus();
+  }
+
+  function rebuildSearchCards() {
+    // Remove all cards from DOM
+    searchesArea.querySelectorAll('.search-card').forEach(c => c.remove());
+  }
+
+  // ---- Highlight map ----
+
+  function rebuildHighlightMap() {
+    highlightMap.clear();
+    for (const search of searches) {
+      for (const result of search.results) {
+        for (const idx of result.indices) {
+          // Last search wins for overlapping chars (or we could blend)
+          highlightMap.set(idx, search.color);
+        }
+      }
     }
   }
 
-  function renderFrame() {
-    renderScheduled = false;
+  // ---- Search execution ----
 
-    const viewW = parseFloat(canvas.style.width);
-    const viewH = parseFloat(canvas.style.height);
-    const scrollPx = scrollRow * rowHeight; // fractional pixel offset
-
-    ctx.clearRect(0, 0, viewW, viewH);
-
-    // Visible row range
-    let firstRow = Math.floor(scrollRow);
-    let lastRow = Math.ceil(scrollRow + visibleRows);
-    firstRow = Math.max(0, firstRow);
-    lastRow = Math.min(totalRows - 1, lastRow);
-
-    const hasHighlight = highlightedIndices.size > 0;
-
-    // Draw text
-    ctx.font = `${FONT_SIZE}px ${FONT_FAMILY}`;
-    ctx.textBaseline = 'alphabetic';
-
-    for (let row = firstRow; row <= lastRow; row++) {
-      const y = row * rowHeight - scrollPx + baselineOffset;
-      const rowStart = row * gridCols;
-      const rowEnd = Math.min(rowStart + gridCols, originalChars.length);
-
-      for (let i = rowStart; i < rowEnd; i++) {
-        const col = i - rowStart;
-        const x = col * cellWidth;
-        const isHL = hasHighlight && highlightedIndices.has(i);
-
-        if (isHL) {
-          const bgY = row * rowHeight - scrollPx;
-          ctx.fillStyle = 'rgba(233, 69, 96, 0.25)';
-          ctx.fillRect(x, bgY, cellWidth, rowHeight);
-          ctx.fillStyle = '#ffdd57';
-          ctx.font = `bold ${FONT_SIZE}px ${FONT_FAMILY}`;
-          ctx.fillText(originalChars[i], x, y);
-          ctx.font = `${FONT_SIZE}px ${FONT_FAMILY}`;
-        } else {
-          ctx.fillStyle = '#c8c8d8';
-          ctx.fillText(originalChars[i], x, y);
-        }
-      }
-    }
-
-    // Draw ELS connecting lines and dots
-    if (activeResultIndex >= 0 && currentResults[activeResultIndex]) {
-      const result = currentResults[activeResultIndex];
-      const points = result.indices.map(idx => {
-        const row = Math.floor(idx / gridCols);
-        const col = idx % gridCols;
-        return {
-          x: col * cellWidth + cellWidth / 2,
-          y: row * rowHeight + rowHeight / 2 - scrollPx
-        };
-      });
-
-      if (points.length > 1) {
-        ctx.strokeStyle = 'rgba(233, 69, 96, 0.7)';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([4, 3]);
-        ctx.beginPath();
-        ctx.moveTo(points[0].x, points[0].y);
-        for (let i = 1; i < points.length; i++) {
-          ctx.lineTo(points[i].x, points[i].y);
-        }
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        ctx.fillStyle = 'rgba(233, 69, 96, 0.9)';
-        for (const p of points) {
-          if (p.y >= -rowHeight && p.y <= viewH + rowHeight) {
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-      }
-    }
-  }
-
-  // Re-layout on resize
-  let resizeTimer;
-  window.addEventListener('resize', () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => {
-      if (originalChars.length > 0) {
-        measureFont();
-        setupGrid();
-        if (activeResultIndex >= 0 && currentResults[activeResultIndex]) {
-          scrollToResult(currentResults[activeResultIndex]);
-        }
-      }
-    }, 200);
-  });
-
-  // ---- ELS Search ----
-
-  searchBtn.addEventListener('click', startSearch);
-  searchTerm.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') startSearch();
-  });
-
-  function startSearch() {
-    const term = searchTerm.value.trim();
+  function runSearch(search) {
+    const term = search.dom.termInput.value.trim();
     if (!term || !cleanedText) return;
 
     const needle = Array.from(term.toUpperCase()).filter(c => /\p{Letter}/u.test(c)).join('');
     if (needle.length < 2) {
-      resultsStatus.textContent = 'Search term must have at least 2 letters.';
+      search.dom.status.textContent = 'Need at least 2 letters.';
       return;
     }
 
-    const lo = Math.max(1, parseInt(minSkipEl.value) || 1);
-    const hi = Math.min(cleanedText.length, parseInt(maxSkipEl.value) || 1000);
-
+    const lo = Math.max(1, parseInt(search.dom.minInput.value) || 1);
+    const hi = Math.min(cleanedText.length, parseInt(search.dom.maxInput.value) || 1000);
     if (lo > hi) {
-      resultsStatus.textContent = 'Min spacing must be \u2264 max spacing.';
+      search.dom.status.textContent = 'Min spacing must be \u2264 max.';
       return;
     }
 
-    if (searchAbort) searchAbort.abort = true;
+    // Cancel previous search on this card
+    if (search.abort) search.abort.abort = true;
 
-    clearResults();
-    searchBtn.disabled = true;
-    progressContainer.classList.add('visible');
-    progressFill.style.width = '0%';
-    resultsStatus.textContent = 'Searching\u2026';
+    // Clear previous results for this card
+    search.results = [];
+    search.dom.resultsList.innerHTML = '';
+    if (activeSearchId === search.id) {
+      activeSearchId = -1;
+      activeResultIdx = -1;
+    }
+
+    search.dom.searchButton.disabled = true;
+    search.dom.progress.classList.add('visible');
+    search.dom.progressFill.style.width = '0%';
+    search.dom.status.textContent = 'Searching\u2026';
+
+    // Update title
+    search.dom.title.textContent = needle;
+    search.term = needle;
 
     const abort = { abort: false };
-    searchAbort = abort;
+    search.abort = abort;
 
-    elsSearchAsync(cleanedText, needle, lo, hi, abort).then((results) => {
+    elsSearchAsync(cleanedText, needle, lo, hi, abort, (pct) => {
+      search.dom.progressFill.style.width = pct + '%';
+    }).then((results) => {
       if (abort.abort) return;
-      searchBtn.disabled = false;
-      progressContainer.classList.remove('visible');
+      search.abort = null;
+      search.dom.searchButton.disabled = false;
+      search.dom.progress.classList.remove('visible');
 
-      currentResults = results;
-      resultsStatus.textContent = `Found ${results.length} result${results.length !== 1 ? 's' : ''}.`;
+      search.results = results;
+      search.dom.status.textContent = `${results.length} result${results.length !== 1 ? 's' : ''}`;
+      search.dom.count.textContent = results.length > 0 ? `(${results.length})` : '';
 
-      results.forEach((r, idx) => {
+      // Build result list items
+      results.forEach((r, rIdx) => {
         const li = document.createElement('li');
 
         const wordDiv = document.createElement('div');
         wordDiv.className = 'result-word';
+        wordDiv.style.color = search.color.text;
         wordDiv.textContent = r.display;
         li.appendChild(wordDiv);
 
         const detailDiv = document.createElement('div');
         detailDiv.className = 'result-detail';
         const direction = r.skip > 0 ? 'forward' : 'reverse';
-        detailDiv.textContent = `Spacing: ${Math.abs(r.skip)} | Position: ${r.indices[0]} | Dir: ${direction}`;
+        detailDiv.textContent = `Skip: ${Math.abs(r.skip)} | Pos: ${r.indices[0]} | ${direction}`;
         li.appendChild(detailDiv);
 
-        li.addEventListener('click', () => selectResult(idx));
-        resultsList.appendChild(li);
+        li.addEventListener('click', () => selectResult(search.id, rIdx));
+        search.dom.resultsList.appendChild(li);
       });
+
+      rebuildHighlightMap();
+      scheduleRender();
     });
   }
 
-  function elsSearchAsync(text, needle, minS, maxS, abort) {
+  // ---- ELS search algorithm (unchanged) ----
+
+  function elsSearchAsync(text, needle, minS, maxS, abort, onProgress) {
     return new Promise((resolve) => {
       const results = [];
       const needleLen = needle.length;
@@ -763,7 +887,7 @@ html, body {
           processed += 2;
         }
 
-        progressFill.style.width = Math.min(100, (processed / totalSkips) * 100) + '%';
+        onProgress(Math.min(100, (processed / totalSkips) * 100));
 
         if (currentSkip > maxS) {
           results.sort((a, b) => Math.abs(a.skip) - Math.abs(b.skip));
@@ -812,43 +936,152 @@ html, body {
     }
   }
 
-  // ---- Result selection & highlighting ----
+  // ---- Result selection ----
 
-  function clearResults() {
-    currentResults = [];
-    activeResultIndex = -1;
-    resultsList.innerHTML = '';
-    highlightedIndices.clear();
-    scheduleRender();
-  }
-
-  function selectResult(idx) {
-    if (idx === activeResultIndex) return;
-
-    const lis = resultsList.querySelectorAll('li');
-    lis.forEach(li => li.classList.remove('active'));
-    if (lis[idx]) lis[idx].classList.add('active');
-
-    activeResultIndex = idx;
-    const result = currentResults[idx];
-
-    highlightedIndices.clear();
-    for (const i of result.indices) {
-      highlightedIndices.add(i);
+  function selectResult(searchId, resultIdx) {
+    // Deselect previous
+    if (activeSearchId >= 0) {
+      const prevSearch = searches.find(s => s.id === activeSearchId);
+      if (prevSearch) {
+        const prevLis = prevSearch.dom.resultsList.querySelectorAll('li');
+        prevLis.forEach(li => li.classList.remove('active'));
+      }
     }
 
-    scrollToResult(result);
+    // If clicking the same result, deselect
+    if (activeSearchId === searchId && activeResultIdx === resultIdx) {
+      activeSearchId = -1;
+      activeResultIdx = -1;
+      scheduleRender();
+      return;
+    }
+
+    activeSearchId = searchId;
+    activeResultIdx = resultIdx;
+
+    const search = searches.find(s => s.id === searchId);
+    if (!search) return;
+
+    const lis = search.dom.resultsList.querySelectorAll('li');
+    if (lis[resultIdx]) lis[resultIdx].classList.add('active');
+
+    scrollToResult(search.results[resultIdx]);
   }
 
   function scrollToResult(result) {
     const minIdx = Math.min(...result.indices);
     const maxIdx = Math.max(...result.indices);
-    const firstResultRow = Math.floor(minIdx / gridCols);
-    const lastResultRow = Math.floor(maxIdx / gridCols);
-
-    const midRow = (firstResultRow + lastResultRow) / 2;
+    const firstRow = Math.floor(minIdx / gridCols);
+    const lastRow = Math.floor(maxIdx / gridCols);
+    const midRow = (firstRow + lastRow) / 2;
     setScrollRow(midRow - visibleRows / 2);
   }
+
+  // ---- Rendering ----
+
+  function scheduleRender() {
+    if (!renderScheduled) {
+      renderScheduled = true;
+      requestAnimationFrame(renderFrame);
+    }
+  }
+
+  function renderFrame() {
+    renderScheduled = false;
+
+    const viewW = parseFloat(canvas.style.width);
+    const viewH = parseFloat(canvas.style.height);
+    const scrollPx = scrollRow * rowHeight;
+
+    ctx.clearRect(0, 0, viewW, viewH);
+
+    let firstRow = Math.floor(scrollRow);
+    let lastRow = Math.ceil(scrollRow + visibleRows);
+    firstRow = Math.max(0, firstRow);
+    lastRow = Math.min(totalRows - 1, lastRow);
+
+    const hasHighlight = highlightMap.size > 0;
+
+    // Draw text
+    ctx.font = `${FONT_SIZE}px ${FONT_FAMILY}`;
+    ctx.textBaseline = 'alphabetic';
+
+    for (let row = firstRow; row <= lastRow; row++) {
+      const y = row * rowHeight - scrollPx + baselineOffset;
+      const rowStart = row * gridCols;
+      const rowEnd = Math.min(rowStart + gridCols, originalChars.length);
+
+      for (let i = rowStart; i < rowEnd; i++) {
+        const col = i - rowStart;
+        const x = col * cellWidth;
+        const hlColor = hasHighlight ? highlightMap.get(i) : undefined;
+
+        if (hlColor) {
+          const bgY = row * rowHeight - scrollPx;
+          ctx.fillStyle = hlColor.bg;
+          ctx.fillRect(x, bgY, cellWidth, rowHeight);
+          ctx.fillStyle = hlColor.text;
+          ctx.font = `bold ${FONT_SIZE}px ${FONT_FAMILY}`;
+          ctx.fillText(originalChars[i], x, y);
+          ctx.font = `${FONT_SIZE}px ${FONT_FAMILY}`;
+        } else {
+          ctx.fillStyle = '#c8c8d8';
+          ctx.fillText(originalChars[i], x, y);
+        }
+      }
+    }
+
+    // Draw connecting lines for the active (focused) result
+    if (activeSearchId >= 0) {
+      const search = searches.find(s => s.id === activeSearchId);
+      if (search && search.results[activeResultIdx]) {
+        const result = search.results[activeResultIdx];
+        const color = search.color;
+        const points = result.indices.map(idx => {
+          const row = Math.floor(idx / gridCols);
+          const col = idx % gridCols;
+          return {
+            x: col * cellWidth + cellWidth / 2,
+            y: row * rowHeight + rowHeight / 2 - scrollPx
+          };
+        });
+
+        if (points.length > 1) {
+          ctx.strokeStyle = color.line;
+          ctx.lineWidth = 2;
+          ctx.setLineDash([4, 3]);
+          ctx.beginPath();
+          ctx.moveTo(points[0].x, points[0].y);
+          for (let i = 1; i < points.length; i++) {
+            ctx.lineTo(points[i].x, points[i].y);
+          }
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          ctx.fillStyle = color.dot;
+          for (const p of points) {
+            if (p.y >= -rowHeight && p.y <= viewH + rowHeight) {
+              ctx.beginPath();
+              ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Re-layout on resize
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if (originalChars.length > 0) {
+        measureFont();
+        setupGrid();
+      }
+    }, 200);
+  });
 
 })();
 </script>
