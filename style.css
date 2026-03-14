@@ -70,6 +70,9 @@ html, body {
   overflow: hidden;
 }
 
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
 #app {
   display: flex;
   height: 100vh;
@@ -444,6 +447,16 @@ html, body {
   font-size: 0.7rem;
   color: var(--text-dim);
   margin-top: 1px;
+}
+
+/* ---- Panel footer ---- */
+#panel-footer {
+  padding: 10px 20px;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  text-align: center;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 /* Scrollbar styling for panel */
