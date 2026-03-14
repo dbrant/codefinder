@@ -15,11 +15,10 @@
   --text: #e0e0e0;
   --text-dim: #8888aa;
   --accent: #e94560;
-  --accent2: #0f3460;
-  --highlight: #e94560;
   --grid-text: #c8c8d8;
   --grid-highlight: #ffdd57;
   --border: #2a2a4a;
+  --scrollbar-w: 10px;
 }
 
 html, body {
@@ -57,7 +56,6 @@ html, body {
   margin: 24px;
   transition: border-color 0.2s, background 0.2s;
   z-index: 10;
-  pointer-events: auto;
 }
 
 #drop-zone.drag-over {
@@ -67,15 +65,8 @@ html, body {
 
 #drop-zone.hidden { display: none; }
 
-#drop-zone .icon {
-  font-size: 64px;
-  opacity: 0.4;
-}
-
-#drop-zone p {
-  font-size: 1.1rem;
-  color: var(--text-dim);
-}
+#drop-zone .icon { font-size: 64px; opacity: 0.4; }
+#drop-zone p { font-size: 1.1rem; color: var(--text-dim); }
 
 #drop-zone label {
   padding: 10px 28px;
@@ -89,60 +80,49 @@ html, body {
 #drop-zone label:hover { background: #c73550; }
 #drop-zone input[type="file"] { display: none; }
 
-/* ---- Text Grid (virtual scroll) ---- */
+/* ---- Canvas + custom scrollbar ---- */
 #grid-container {
   position: relative;
   display: none;
   height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-#grid-spacer {
-  /* Tall invisible div that creates the correct scrollbar size */
-  width: 1px;
-  pointer-events: none;
-}
-
-#grid-viewport {
-  position: sticky;
-  top: 0;
-  height: 100%;
   overflow: hidden;
-  pointer-events: none;
 }
 
 #grid-canvas {
+  display: block;
   position: absolute;
   top: 0;
   left: 0;
-  pointer-events: none;
-  z-index: 2;
 }
 
-#text-grid {
-  font-family: 'Consolas', 'Courier New', 'Liberation Mono', monospace;
-  font-size: 14px;
-  line-height: 1.5;
-  letter-spacing: 2px;
-  color: var(--grid-text);
-  word-break: break-all;
-  white-space: pre-wrap;
+/* Custom scrollbar */
+#scrollbar-track {
   position: absolute;
   top: 0;
-  left: 0;
-  z-index: 1;
-  user-select: none;
-  pointer-events: auto;
+  right: 0;
+  width: var(--scrollbar-w);
+  height: 100%;
+  background: rgba(255,255,255,0.03);
+  cursor: pointer;
+  z-index: 5;
 }
 
-#text-grid .els-char {
-  color: var(--grid-highlight);
-  font-weight: bold;
-  text-shadow: 0 0 6px rgba(255, 221, 87, 0.5);
-  position: relative;
-  z-index: 3;
+#scrollbar-thumb {
+  position: absolute;
+  top: 0;
+  left: 1px;
+  width: calc(var(--scrollbar-w) - 2px);
+  min-height: 24px;
+  background: var(--border);
+  border-radius: 4px;
+  cursor: grab;
+  transition: background 0.15s;
 }
+#scrollbar-thumb:hover,
+#scrollbar-thumb.dragging {
+  background: #4a4a6a;
+}
+#scrollbar-thumb.dragging { cursor: grabbing; }
 
 /* ---- Control Panel ---- */
 #panel {
@@ -203,14 +183,9 @@ html, body {
   transition: border-color 0.2s;
 }
 
-.panel-section input:focus {
-  border-color: var(--accent);
-}
+.panel-section input:focus { border-color: var(--accent); }
 
-.spacing-row {
-  display: flex;
-  gap: 10px;
-}
+.spacing-row { display: flex; gap: 10px; }
 .spacing-row > div { flex: 1; }
 
 #search-btn {
@@ -227,10 +202,7 @@ html, body {
   transition: background 0.2s;
 }
 #search-btn:hover { background: #c73550; }
-#search-btn:disabled {
-  background: #555;
-  cursor: not-allowed;
-}
+#search-btn:disabled { background: #555; cursor: not-allowed; }
 
 #file-info {
   font-size: 0.8rem;
@@ -240,11 +212,7 @@ html, body {
 }
 
 /* ---- Results ---- */
-#results-area {
-  flex: 1;
-  overflow-y: auto;
-  padding: 0;
-}
+#results-area { flex: 1; overflow-y: auto; padding: 0; }
 
 #results-area h2 {
   font-size: 0.85rem;
@@ -260,9 +228,7 @@ html, body {
   color: var(--text-dim);
 }
 
-#results-list {
-  list-style: none;
-}
+#results-list { list-style: none; }
 
 #results-list li {
   padding: 10px 20px;
@@ -272,9 +238,7 @@ html, body {
   font-size: 0.9rem;
 }
 
-#results-list li:hover {
-  background: rgba(233, 69, 96, 0.1);
-}
+#results-list li:hover { background: rgba(233, 69, 96, 0.1); }
 
 #results-list li.active {
   background: rgba(233, 69, 96, 0.2);
@@ -295,10 +259,7 @@ html, body {
 }
 
 /* ---- Progress ---- */
-#progress-bar-container {
-  display: none;
-  padding: 8px 20px;
-}
+#progress-bar-container { display: none; padding: 8px 20px; }
 #progress-bar-container.visible { display: block; }
 
 #progress-bar {
@@ -315,12 +276,6 @@ html, body {
   border-radius: 3px;
   transition: width 0.1s;
 }
-
-/* Scrollbar styling */
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #3a3a5a; }
 </style>
 </head>
 <body>
@@ -336,11 +291,10 @@ html, body {
       </label>
     </div>
     <div id="grid-container">
-      <div id="grid-viewport">
-        <canvas id="grid-canvas"></canvas>
-        <div id="text-grid"></div>
+      <canvas id="grid-canvas"></canvas>
+      <div id="scrollbar-track">
+        <div id="scrollbar-thumb"></div>
       </div>
-      <div id="grid-spacer"></div>
     </div>
   </div>
 
@@ -389,15 +343,14 @@ html, body {
   const fileInput = document.getElementById('file-input');
   const gridArea = document.getElementById('grid-area');
   const gridContainer = document.getElementById('grid-container');
-  const gridViewport = document.getElementById('grid-viewport');
-  const gridSpacer = document.getElementById('grid-spacer');
-  const textGrid = document.getElementById('text-grid');
   const canvas = document.getElementById('grid-canvas');
   const ctx = canvas.getContext('2d');
+  const scrollTrack = document.getElementById('scrollbar-track');
+  const scrollThumb = document.getElementById('scrollbar-thumb');
   const fileInfo = document.getElementById('file-info');
   const searchTerm = document.getElementById('search-term');
-  const minSkip = document.getElementById('min-skip');
-  const maxSkip = document.getElementById('max-skip');
+  const minSkipEl = document.getElementById('min-skip');
+  const maxSkipEl = document.getElementById('max-skip');
   const searchBtn = document.getElementById('search-btn');
   const resultsList = document.getElementById('results-list');
   const resultsStatus = document.getElementById('results-status');
@@ -405,23 +358,27 @@ html, body {
   const progressFill = document.getElementById('progress-bar-fill');
 
   // ---- State ----
-  let cleanedText = '';       // letters only, uppercased
-  let originalChars = [];     // array of original (cleaned) characters for display
+  let cleanedText = '';
+  let originalChars = [];
   let gridCols = 0;
   let totalRows = 0;
-  let rowHeight = 0;          // measured px height of one row
-  let charWidth = 0;          // measured px width of one character
+  let rowHeight = 0;
+  let cellWidth = 0;
+  let baselineOffset = 0;
+  let visibleRows = 0;       // how many rows fit in the viewport
+  let scrollRow = 0;          // logical scroll position (fractional top row)
+  let maxScrollRow = 0;       // max value for scrollRow
   let currentResults = [];
   let activeResultIndex = -1;
-  let highlightedIndices = new Set(); // char indices to highlight
+  let highlightedIndices = new Set();
   let searchAbort = null;
-
-  // Virtual scroll state
-  let renderedFirstRow = -1;
-  let renderedLastRow = -1;
   let renderScheduled = false;
-  // Map from char index -> span element (only for currently rendered chars)
-  let charSpanMap = new Map();
+  let dpr = 1;
+
+  // Scrollbar drag state
+  let thumbDragging = false;
+  let thumbDragStartY = 0;
+  let thumbDragStartRow = 0;
 
   // ---- File loading ----
 
@@ -429,10 +386,7 @@ html, body {
     e.preventDefault();
     dropZone.classList.add('drag-over');
   });
-
-  dropZone.addEventListener('dragleave', () => {
-    dropZone.classList.remove('drag-over');
-  });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
 
   dropZone.addEventListener('drop', (e) => {
     e.preventDefault();
@@ -447,25 +401,18 @@ html, body {
 
   function loadFile(file) {
     const reader = new FileReader();
-    reader.onload = (e) => {
-      const raw = e.target.result;
-      processText(raw, file.name);
-    };
+    reader.onload = (e) => processText(e.target.result, file.name);
     reader.readAsText(file, 'UTF-8');
   }
 
   // ---- Text processing ----
 
-  function isLetter(ch) {
-    return /\p{Letter}/u.test(ch);
-  }
+  function isLetter(ch) { return /\p{Letter}/u.test(ch); }
 
   function stripToLetters(text) {
     const result = [];
     for (const char of text) {
-      if (isLetter(char)) {
-        result.push(char);
-      }
+      if (isLetter(char)) result.push(char);
     }
     return result;
   }
@@ -477,7 +424,6 @@ html, body {
     fileInfo.textContent = `${filename} \u2014 ${originalChars.length.toLocaleString()} letters`;
     searchBtn.disabled = false;
 
-    // Hide drop zone, show grid
     dropZone.classList.add('hidden');
     gridContainer.style.display = 'block';
 
@@ -488,123 +434,230 @@ html, body {
 
   // ---- Font measurement ----
 
+  const FONT_SIZE = 14;
+  const LINE_HEIGHT = 1.5;
+  const FONT_FAMILY = "'Consolas', 'Courier New', 'Liberation Mono', monospace";
+
   function measureFont() {
-    const tmp = document.createElement('span');
-    tmp.style.fontFamily = "'Consolas', 'Courier New', 'Liberation Mono', monospace";
-    tmp.style.fontSize = '14px';
-    tmp.style.lineHeight = '1.5';
-    tmp.style.letterSpacing = '2px';
-    tmp.style.position = 'absolute';
-    tmp.style.visibility = 'hidden';
-    tmp.style.whiteSpace = 'pre';
-    tmp.textContent = 'M\nM';
-    document.body.appendChild(tmp);
-    const rect = tmp.getBoundingClientRect();
-    charWidth = rect.width;  // single char width (with letter-spacing)
-    rowHeight = rect.height / 2;
-    document.body.removeChild(tmp);
+    dpr = window.devicePixelRatio || 1;
+    const tmpCanvas = document.createElement('canvas');
+    const tmpCtx = tmpCanvas.getContext('2d');
+    tmpCtx.font = `${FONT_SIZE}px ${FONT_FAMILY}`;
+    const metrics = tmpCtx.measureText('M');
+    cellWidth = Math.ceil(metrics.width + 2);
+    rowHeight = Math.ceil(FONT_SIZE * LINE_HEIGHT);
+    baselineOffset = Math.ceil(FONT_SIZE * 1.15);
   }
 
-  // ---- Virtual-scrolled grid ----
+  // ---- Grid setup ----
 
   function computeGridCols() {
-    const areaWidth = gridArea.clientWidth - 24; // account for padding
-    return Math.max(1, Math.floor(areaWidth / charWidth));
+    // Reserve scrollbar width
+    const areaWidth = gridArea.clientWidth - 24 - 12; // padding + scrollbar
+    return Math.max(1, Math.floor(areaWidth / cellWidth));
   }
 
   function setupGrid() {
     gridCols = computeGridCols();
     totalRows = Math.ceil(originalChars.length / gridCols);
 
-    // Set spacer height to represent the full virtual document
-    const totalHeight = totalRows * rowHeight;
-    gridSpacer.style.height = totalHeight + 'px';
-
-    // Size the viewport and canvas to the visible area
+    const viewW = gridContainer.clientWidth - 12; // minus scrollbar
     const viewH = gridContainer.clientHeight;
-    canvas.width = gridContainer.clientWidth;
-    canvas.height = viewH;
+    visibleRows = viewH / rowHeight;
+    maxScrollRow = Math.max(0, totalRows - visibleRows);
 
-    // Reset virtual scroll state
-    renderedFirstRow = -1;
-    renderedLastRow = -1;
-    charSpanMap.clear();
-    textGrid.innerHTML = '';
+    // Clamp current scroll
+    scrollRow = Math.min(scrollRow, maxScrollRow);
 
-    // Scroll to top
-    gridContainer.scrollTop = 0;
+    // Size canvas (CSS px)
+    canvas.style.width = viewW + 'px';
+    canvas.style.height = viewH + 'px';
+    canvas.width = viewW * dpr;
+    canvas.height = viewH * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    // Initial render
-    renderVisibleRows();
+    updateScrollbar();
+    scheduleRender();
   }
 
-  function renderVisibleRows() {
+  // ---- Logical scroll helpers ----
+
+  function setScrollRow(row) {
+    scrollRow = Math.max(0, Math.min(row, maxScrollRow));
+    updateScrollbar();
+    scheduleRender();
+  }
+
+  // ---- Custom scrollbar ----
+
+  function updateScrollbar() {
+    if (totalRows <= 0) return;
+    const trackH = scrollTrack.clientHeight;
+
+    // Thumb height proportional to visible fraction, min 24px
+    const thumbH = Math.max(24, (visibleRows / totalRows) * trackH);
+    scrollThumb.style.height = thumbH + 'px';
+
+    // Thumb position
+    const scrollable = trackH - thumbH;
+    const ratio = maxScrollRow > 0 ? scrollRow / maxScrollRow : 0;
+    scrollThumb.style.top = (ratio * scrollable) + 'px';
+
+    // Hide scrollbar if everything fits
+    scrollTrack.style.display = totalRows <= visibleRows ? 'none' : '';
+  }
+
+  // Thumb drag
+  scrollThumb.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    thumbDragging = true;
+    thumbDragStartY = e.clientY;
+    thumbDragStartRow = scrollRow;
+    scrollThumb.classList.add('dragging');
+    scrollThumb.setPointerCapture(e.pointerId);
+  });
+
+  scrollThumb.addEventListener('pointermove', (e) => {
+    if (!thumbDragging) return;
+    const trackH = scrollTrack.clientHeight;
+    const thumbH = scrollThumb.clientHeight;
+    const scrollable = trackH - thumbH;
+    if (scrollable <= 0) return;
+
+    const dy = e.clientY - thumbDragStartY;
+    const rowDelta = (dy / scrollable) * maxScrollRow;
+    setScrollRow(thumbDragStartRow + rowDelta);
+  });
+
+  scrollThumb.addEventListener('pointerup', () => {
+    thumbDragging = false;
+    scrollThumb.classList.remove('dragging');
+  });
+
+  // Click on track (jump to position)
+  scrollTrack.addEventListener('pointerdown', (e) => {
+    if (e.target === scrollThumb) return;
+    const trackRect = scrollTrack.getBoundingClientRect();
+    const clickY = e.clientY - trackRect.top;
+    const trackH = trackRect.height;
+    const ratio = clickY / trackH;
+    setScrollRow(ratio * maxScrollRow);
+  });
+
+  // Mouse wheel on the grid area
+  gridContainer.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    // deltaY in pixels -> convert to rows (3 rows per "click")
+    const rowDelta = (e.deltaY / 100) * 3;
+    setScrollRow(scrollRow + rowDelta);
+  }, { passive: false });
+
+  // Keyboard scrolling when grid area is focused/hovered
+  gridContainer.setAttribute('tabindex', '0');
+  gridContainer.style.outline = 'none';
+  gridContainer.addEventListener('keydown', (e) => {
+    const pageRows = Math.floor(visibleRows);
+    switch (e.key) {
+      case 'ArrowUp':    setScrollRow(scrollRow - 1); e.preventDefault(); break;
+      case 'ArrowDown':  setScrollRow(scrollRow + 1); e.preventDefault(); break;
+      case 'PageUp':     setScrollRow(scrollRow - pageRows); e.preventDefault(); break;
+      case 'PageDown':   setScrollRow(scrollRow + pageRows); e.preventDefault(); break;
+      case 'Home':       setScrollRow(0); e.preventDefault(); break;
+      case 'End':        setScrollRow(maxScrollRow); e.preventDefault(); break;
+    }
+  });
+
+  // ---- Rendering ----
+
+  function scheduleRender() {
+    if (!renderScheduled) {
+      renderScheduled = true;
+      requestAnimationFrame(renderFrame);
+    }
+  }
+
+  function renderFrame() {
     renderScheduled = false;
 
-    const scrollTop = gridContainer.scrollTop;
-    const viewH = gridContainer.clientHeight;
+    const viewW = parseFloat(canvas.style.width);
+    const viewH = parseFloat(canvas.style.height);
+    const scrollPx = scrollRow * rowHeight; // fractional pixel offset
 
-    // Which rows are visible?
-    const bufferRows = 5; // render a few extra rows above/below for smooth scrolling
-    let firstRow = Math.floor(scrollTop / rowHeight) - bufferRows;
-    let lastRow = Math.ceil((scrollTop + viewH) / rowHeight) + bufferRows;
+    ctx.clearRect(0, 0, viewW, viewH);
+
+    // Visible row range
+    let firstRow = Math.floor(scrollRow);
+    let lastRow = Math.ceil(scrollRow + visibleRows);
     firstRow = Math.max(0, firstRow);
     lastRow = Math.min(totalRows - 1, lastRow);
 
-    // Skip re-render if the visible range hasn't changed
-    if (firstRow === renderedFirstRow && lastRow === renderedLastRow) {
-      // Still need to update the text-grid offset and redraw canvas overlay
-      updateGridPosition(scrollTop);
-      drawHighlightOverlay(scrollTop);
-      return;
-    }
+    const hasHighlight = highlightedIndices.size > 0;
 
-    renderedFirstRow = firstRow;
-    renderedLastRow = lastRow;
+    // Draw text
+    ctx.font = `${FONT_SIZE}px ${FONT_FAMILY}`;
+    ctx.textBaseline = 'alphabetic';
 
-    // Build only the visible rows
-    const fragment = document.createDocumentFragment();
-    charSpanMap.clear();
+    for (let row = firstRow; row <= lastRow; row++) {
+      const y = row * rowHeight - scrollPx + baselineOffset;
+      const rowStart = row * gridCols;
+      const rowEnd = Math.min(rowStart + gridCols, originalChars.length);
 
-    const startIdx = firstRow * gridCols;
-    const endIdx = Math.min((lastRow + 1) * gridCols, originalChars.length);
+      for (let i = rowStart; i < rowEnd; i++) {
+        const col = i - rowStart;
+        const x = col * cellWidth;
+        const isHL = hasHighlight && highlightedIndices.has(i);
 
-    for (let i = startIdx; i < endIdx; i++) {
-      const span = document.createElement('span');
-      span.textContent = originalChars[i];
-      if (highlightedIndices.has(i)) {
-        span.className = 'els-char';
-      }
-      charSpanMap.set(i, span);
-      fragment.appendChild(span);
-
-      // Line break at end of each row
-      if ((i + 1) % gridCols === 0) {
-        fragment.appendChild(document.createTextNode('\n'));
+        if (isHL) {
+          const bgY = row * rowHeight - scrollPx;
+          ctx.fillStyle = 'rgba(233, 69, 96, 0.25)';
+          ctx.fillRect(x, bgY, cellWidth, rowHeight);
+          ctx.fillStyle = '#ffdd57';
+          ctx.font = `bold ${FONT_SIZE}px ${FONT_FAMILY}`;
+          ctx.fillText(originalChars[i], x, y);
+          ctx.font = `${FONT_SIZE}px ${FONT_FAMILY}`;
+        } else {
+          ctx.fillStyle = '#c8c8d8';
+          ctx.fillText(originalChars[i], x, y);
+        }
       }
     }
 
-    textGrid.innerHTML = '';
-    textGrid.appendChild(fragment);
+    // Draw ELS connecting lines and dots
+    if (activeResultIndex >= 0 && currentResults[activeResultIndex]) {
+      const result = currentResults[activeResultIndex];
+      const points = result.indices.map(idx => {
+        const row = Math.floor(idx / gridCols);
+        const col = idx % gridCols;
+        return {
+          x: col * cellWidth + cellWidth / 2,
+          y: row * rowHeight + rowHeight / 2 - scrollPx
+        };
+      });
 
-    updateGridPosition(scrollTop);
-    drawHighlightOverlay(scrollTop);
-  }
+      if (points.length > 1) {
+        ctx.strokeStyle = 'rgba(233, 69, 96, 0.7)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++) {
+          ctx.lineTo(points[i].x, points[i].y);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
 
-  function updateGridPosition(scrollTop) {
-    // Position the text-grid so that the rendered rows appear at the correct
-    // offset within the sticky viewport.
-    const offset = renderedFirstRow * rowHeight - scrollTop;
-    textGrid.style.transform = `translateY(${offset}px)`;
-  }
-
-  // Schedule a render on scroll (throttled to rAF)
-  gridContainer.addEventListener('scroll', () => {
-    if (!renderScheduled) {
-      renderScheduled = true;
-      requestAnimationFrame(renderVisibleRows);
+        ctx.fillStyle = 'rgba(233, 69, 96, 0.9)';
+        for (const p of points) {
+          if (p.y >= -rowHeight && p.y <= viewH + rowHeight) {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
     }
-  }, { passive: true });
+  }
 
   // Re-layout on resize
   let resizeTimer;
@@ -638,15 +691,14 @@ html, body {
       return;
     }
 
-    const lo = Math.max(1, parseInt(minSkip.value) || 1);
-    const hi = Math.min(cleanedText.length, parseInt(maxSkip.value) || 1000);
+    const lo = Math.max(1, parseInt(minSkipEl.value) || 1);
+    const hi = Math.min(cleanedText.length, parseInt(maxSkipEl.value) || 1000);
 
     if (lo > hi) {
       resultsStatus.textContent = 'Min spacing must be \u2264 max spacing.';
       return;
     }
 
-    // Cancel previous search
     if (searchAbort) searchAbort.abort = true;
 
     clearResults();
@@ -686,7 +738,6 @@ html, body {
     });
   }
 
-  // Async chunked search to avoid blocking UI
   function elsSearchAsync(text, needle, minS, maxS, abort) {
     return new Promise((resolve) => {
       const results = [];
@@ -767,15 +818,8 @@ html, body {
     currentResults = [];
     activeResultIndex = -1;
     resultsList.innerHTML = '';
-    clearHighlight();
-  }
-
-  function clearHighlight() {
     highlightedIndices.clear();
-    // Force re-render to remove highlight classes
-    renderedFirstRow = -1;
-    renderedLastRow = -1;
-    renderVisibleRows();
+    scheduleRender();
   }
 
   function selectResult(idx) {
@@ -788,7 +832,6 @@ html, body {
     activeResultIndex = idx;
     const result = currentResults[idx];
 
-    // Update highlighted indices
     highlightedIndices.clear();
     for (const i of result.indices) {
       highlightedIndices.add(i);
@@ -798,86 +841,13 @@ html, body {
   }
 
   function scrollToResult(result) {
-    // Find the row range that contains this result
     const minIdx = Math.min(...result.indices);
     const maxIdx = Math.max(...result.indices);
     const firstResultRow = Math.floor(minIdx / gridCols);
     const lastResultRow = Math.floor(maxIdx / gridCols);
 
-    // Try to center the result vertically
-    const viewH = gridContainer.clientHeight;
-    const visibleRows = Math.floor(viewH / rowHeight);
-    const midRow = Math.floor((firstResultRow + lastResultRow) / 2);
-    let targetScroll = (midRow - Math.floor(visibleRows / 2)) * rowHeight;
-    targetScroll = Math.max(0, Math.min(targetScroll, gridContainer.scrollHeight - viewH));
-
-    gridContainer.scrollTop = targetScroll;
-
-    // Force re-render with new highlights
-    renderedFirstRow = -1;
-    renderedLastRow = -1;
-    renderVisibleRows();
-  }
-
-  // ---- Canvas highlight overlay ----
-
-  function drawHighlightOverlay(scrollTop) {
-    const viewW = gridContainer.clientWidth;
-    const viewH = gridContainer.clientHeight;
-    canvas.width = viewW;
-    canvas.height = viewH;
-    ctx.clearRect(0, 0, viewW, viewH);
-
-    if (highlightedIndices.size === 0) return;
-
-    // Collect the pixel positions of highlighted chars in viewport coordinates
-    const points = [];
-    // Sort indices so lines connect in sequence
-    const sortedIndices = Array.from(highlightedIndices).sort((a, b) => {
-      // Maintain the order from the result (first to last in the sequence)
-      return 0; // We'll use the result's indices order instead
-    });
-
-    // Use the active result's index order for line drawing
-    let orderedIndices = [];
-    if (activeResultIndex >= 0 && currentResults[activeResultIndex]) {
-      orderedIndices = currentResults[activeResultIndex].indices;
-    }
-
-    for (const idx of orderedIndices) {
-      const row = Math.floor(idx / gridCols);
-      const col = idx % gridCols;
-
-      // Convert to viewport pixel coordinates
-      const x = col * charWidth + charWidth / 2;
-      const y = row * rowHeight + rowHeight / 2 - scrollTop;
-
-      points.push({ x, y, visible: y >= -rowHeight && y <= viewH + rowHeight });
-    }
-
-    if (points.length < 2) return;
-
-    // Draw connecting lines
-    ctx.strokeStyle = 'rgba(233, 69, 96, 0.7)';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([4, 3]);
-    ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].y);
-    for (let i = 1; i < points.length; i++) {
-      ctx.lineTo(points[i].x, points[i].y);
-    }
-    ctx.stroke();
-
-    // Draw dots at each visible letter position
-    ctx.setLineDash([]);
-    ctx.fillStyle = 'rgba(233, 69, 96, 0.9)';
-    for (const p of points) {
-      if (p.visible) {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
+    const midRow = (firstResultRow + lastResultRow) / 2;
+    setScrollRow(midRow - visibleRows / 2);
   }
 
 })();
