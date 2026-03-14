@@ -644,6 +644,83 @@
     }
   }
 
+  function drawResultOverlay(result, color, lineWidth, lineAlpha, rectAlpha, scrollPx, viewH) {
+    const points = result.indices.map(idx => {
+      const row = Math.floor(idx / gridCols);
+      const col = idx % gridCols;
+      return {
+        x: col * cellWidth + cellWidth / 2,
+        y: row * rowHeight + rowHeight / 2 - scrollPx
+      };
+    });
+
+    if (points.length < 2) return;
+
+    const hw = cellWidth / 2;
+    const hh = rowHeight / 2;
+
+    // Draw connecting lines clipped to rectangle edges
+    ctx.globalAlpha = lineAlpha;
+    ctx.strokeStyle = color.line;
+    ctx.lineWidth = lineWidth;
+    ctx.setLineDash([4, 3]);
+    for (let i = 0; i < points.length - 1; i++) {
+      const a = points[i], b = points[i + 1];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      if (dx === 0 && dy === 0) continue;
+
+      const tStart = Math.min(
+        dx !== 0 ? hw / Math.abs(dx) : Infinity,
+        dy !== 0 ? hh / Math.abs(dy) : Infinity
+      );
+      const tEnd = Math.min(
+        dx !== 0 ? hw / Math.abs(dx) : Infinity,
+        dy !== 0 ? hh / Math.abs(dy) : Infinity
+      );
+
+      ctx.beginPath();
+      ctx.moveTo(a.x + dx * tStart, a.y + dy * tStart);
+      ctx.lineTo(b.x - dx * tEnd, b.y - dy * tEnd);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+
+    // Draw rectangles on top
+    ctx.globalAlpha = rectAlpha;
+    ctx.strokeStyle = color.dot;
+    ctx.lineWidth = 1.5;
+    for (const p of points) {
+      if (p.y >= -rowHeight && p.y <= viewH + rowHeight) {
+        ctx.strokeRect(
+          p.x - hw + 0.5,
+          p.y - hh + 0.5,
+          cellWidth - 1,
+          rowHeight - 1
+        );
+      }
+    }
+
+    ctx.globalAlpha = 1;
+  }
+
+  function drawAllResults(scrollPx, viewH) {
+    // Draw inactive results first (dimmed)
+    for (const search of searches) {
+      for (let rIdx = 0; rIdx < search.results.length; rIdx++) {
+        if (search.id === activeSearchId && rIdx === activeResultIdx) continue;
+        drawResultOverlay(search.results[rIdx], search.color, 1, 0.25, 0.35, scrollPx, viewH);
+      }
+    }
+
+    // Draw active result on top (full intensity)
+    if (activeSearchId >= 0) {
+      const search = searches.find(s => s.id === activeSearchId);
+      if (search && search.results[activeResultIdx]) {
+        drawResultOverlay(search.results[activeResultIdx], search.color, 2, 0.7, 1, scrollPx, viewH);
+      }
+    }
+  }
+
   function renderFrame() {
     renderScheduled = false;
 
@@ -693,49 +770,8 @@
       }
     }
 
-    // Draw connecting lines for the active (focused) result
-    if (activeSearchId >= 0) {
-      const search = searches.find(s => s.id === activeSearchId);
-      if (search && search.results[activeResultIdx]) {
-        const result = search.results[activeResultIdx];
-        const color = search.color;
-        const points = result.indices.map(idx => {
-          const row = Math.floor(idx / gridCols);
-          const col = idx % gridCols;
-          return {
-            x: col * cellWidth + cellWidth / 2,
-            y: row * rowHeight + rowHeight / 2 - scrollPx
-          };
-        });
-
-        if (points.length > 1) {
-          ctx.strokeStyle = color.line;
-          ctx.lineWidth = 2;
-          ctx.setLineDash([4, 3]);
-          ctx.beginPath();
-          ctx.moveTo(points[0].x, points[0].y);
-          for (let i = 1; i < points.length; i++) {
-            ctx.lineTo(points[i].x, points[i].y);
-          }
-          ctx.stroke();
-          ctx.setLineDash([]);
-
-          ctx.strokeStyle = color.dot;
-          ctx.lineWidth = 1.5;
-          ctx.setLineDash([]);
-          for (const p of points) {
-            if (p.y >= -rowHeight && p.y <= viewH + rowHeight) {
-              ctx.strokeRect(
-                p.x - cellWidth / 2 + 0.5,
-                p.y - rowHeight / 2 + 0.5,
-                cellWidth - 1,
-                rowHeight - 1
-              );
-            }
-          }
-        }
-      }
-    }
+    // Draw connecting lines and rectangles for all results
+    drawAllResults(scrollPx, viewH);
   }
 
   // Re-layout on resize
