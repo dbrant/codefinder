@@ -10,7 +10,8 @@
   const ctx = canvas.getContext('2d');
   const scrollTrack = document.getElementById('scrollbar-track');
   const scrollThumb = document.getElementById('scrollbar-thumb');
-  const fileInfo = document.getElementById('file-info');
+  const fileInfoText = document.getElementById('file-info-text');
+  const loadFileBtn = document.getElementById('load-file-btn');
   const searchesArea = document.getElementById('searches-area');
   const addSearchBtn = document.getElementById('add-search-btn');
 
@@ -71,6 +72,11 @@
     if (fileInput.files[0]) loadFile(fileInput.files[0]);
   });
 
+  loadFileBtn.addEventListener('click', () => {
+    fileInput.value = '';
+    fileInput.click();
+  });
+
   function loadFile(file) {
     const reader = new FileReader();
     reader.onload = (e) => processText(e.target.result, file.name);
@@ -93,7 +99,7 @@
     originalChars = stripToLetters(raw);
     cleanedText = originalChars.map(c => c.toUpperCase()).join('');
 
-    fileInfo.textContent = `${filename} \u2014 ${originalChars.length.toLocaleString()} letters`;
+    fileInfoText.textContent = `${filename} \u2014 ${originalChars.length.toLocaleString()} letters`;
     addSearchBtn.disabled = false;
 
     dropZone.classList.add('hidden');

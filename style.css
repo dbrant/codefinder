@@ -147,6 +147,32 @@ html, body {
   color: var(--text-dim);
   padding: 8px 20px;
   border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#file-info-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#load-file-btn {
+  flex-shrink: 0;
+  padding: 3px 10px;
+  background: var(--bg-input);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+#load-file-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
 }
 
 /* ---- Search cards area (scrollable) ---- */
