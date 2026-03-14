@@ -51,12 +51,12 @@
     if (btn) setTheme(btn.dataset.theme);
   });
 
-  // Restore saved preference on load
-  (function initTheme() {
+  // Restore saved preference on load (deferred so all vars are declared)
+  requestAnimationFrame(() => {
     let saved;
     try { saved = localStorage.getItem('els-theme'); } catch (e) {}
     setTheme(saved || 'auto');
-  })();
+  });
 
   // ---- Color palette for searches ----
   const COLORS = [
