@@ -720,12 +720,17 @@
           ctx.stroke();
           ctx.setLineDash([]);
 
-          ctx.fillStyle = color.dot;
+          ctx.strokeStyle = color.dot;
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([]);
           for (const p of points) {
             if (p.y >= -rowHeight && p.y <= viewH + rowHeight) {
-              ctx.beginPath();
-              ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-              ctx.fill();
+              ctx.strokeRect(
+                p.x - cellWidth / 2 + 0.5,
+                p.y - rowHeight / 2 + 0.5,
+                cellWidth - 1,
+                rowHeight - 1
+              );
             }
           }
         }
