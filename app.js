@@ -14,6 +14,49 @@
   const loadFileBtn = document.getElementById('load-file-btn');
   const searchesArea = document.getElementById('searches-area');
   const addSearchBtn = document.getElementById('add-search-btn');
+  const themeToggle = document.getElementById('theme-toggle');
+
+  // ---- Theme toggle ----
+
+  function getGridTextColor() {
+    return getComputedStyle(document.documentElement).getPropertyValue('--grid-text').trim();
+  }
+
+  function getBgColor() {
+    return getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+  }
+
+  function setTheme(mode) {
+    const root = document.documentElement;
+    if (mode === 'auto') {
+      root.removeAttribute('data-theme');
+    } else {
+      root.setAttribute('data-theme', mode);
+    }
+
+    // Update toggle button states
+    themeToggle.querySelectorAll('button').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.theme === mode);
+    });
+
+    // Persist preference
+    try { localStorage.setItem('els-theme', mode); } catch (e) {}
+
+    // Re-render canvas with new colors
+    scheduleRender();
+  }
+
+  themeToggle.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-theme]');
+    if (btn) setTheme(btn.dataset.theme);
+  });
+
+  // Restore saved preference on load
+  (function initTheme() {
+    let saved;
+    try { saved = localStorage.getItem('els-theme'); } catch (e) {}
+    setTheme(saved || 'auto');
+  })();
 
   // ---- Color palette for searches ----
   const COLORS = [
@@ -608,14 +651,18 @@
     const viewH = parseFloat(canvas.style.height);
     const scrollPx = scrollRow * rowHeight;
 
-    ctx.clearRect(0, 0, viewW, viewH);
-
     let firstRow = Math.floor(scrollRow);
     let lastRow = Math.ceil(scrollRow + visibleRows);
     firstRow = Math.max(0, firstRow);
     lastRow = Math.min(totalRows - 1, lastRow);
 
     const hasHighlight = highlightMap.size > 0;
+    const gridTextColor = getGridTextColor();
+    const bgColor = getBgColor();
+
+    // Fill background (needed for light mode)
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0, 0, viewW, viewH);
 
     // Draw text
     ctx.font = `${FONT_SIZE}px ${FONT_FAMILY}`;
@@ -640,7 +687,7 @@
           ctx.fillText(originalChars[i], x, y);
           ctx.font = `${FONT_SIZE}px ${FONT_FAMILY}`;
         } else {
-          ctx.fillStyle = '#c8c8d8';
+          ctx.fillStyle = gridTextColor;
           ctx.fillText(originalChars[i], x, y);
         }
       }

@@ -1,16 +1,65 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* ---- Theme variables ---- */
 :root {
   --panel-width: 340px;
+  --scrollbar-w: 10px;
+  --accent: #e94560;
+  --accent-hover: #c73550;
+
+  /* Dark theme (default) */
   --bg: #1a1a2e;
   --bg-panel: #16213e;
   --bg-input: #0f3460;
   --text: #e0e0e0;
   --text-dim: #8888aa;
-  --accent: #e94560;
   --grid-text: #c8c8d8;
   --border: #2a2a4a;
-  --scrollbar-w: 10px;
+  --scrollbar-thumb: #2a2a4a;
+  --scrollbar-thumb-hover: #4a4a6a;
+  --hover-bg: rgba(255,255,255,0.03);
+  --hover-bg-strong: rgba(255,255,255,0.04);
+  --active-bg: rgba(255,255,255,0.08);
+  --scrolltrack-bg: rgba(255,255,255,0.03);
+  --card-search-btn-disabled: #555;
+}
+
+/* Light theme */
+[data-theme="light"] {
+  --bg: #f0f2f5;
+  --bg-panel: #ffffff;
+  --bg-input: #e8ecf1;
+  --text: #1a1a2e;
+  --text-dim: #6b7280;
+  --grid-text: #2d3748;
+  --border: #d1d5db;
+  --scrollbar-thumb: #c0c4cc;
+  --scrollbar-thumb-hover: #a0a4ac;
+  --hover-bg: rgba(0,0,0,0.03);
+  --hover-bg-strong: rgba(0,0,0,0.05);
+  --active-bg: rgba(0,0,0,0.08);
+  --scrolltrack-bg: rgba(0,0,0,0.04);
+  --card-search-btn-disabled: #b0b0b0;
+}
+
+/* Auto: respect system preference when no explicit theme is set */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --bg: #f0f2f5;
+    --bg-panel: #ffffff;
+    --bg-input: #e8ecf1;
+    --text: #1a1a2e;
+    --text-dim: #6b7280;
+    --grid-text: #2d3748;
+    --border: #d1d5db;
+    --scrollbar-thumb: #c0c4cc;
+    --scrollbar-thumb-hover: #a0a4ac;
+    --hover-bg: rgba(0,0,0,0.03);
+    --hover-bg-strong: rgba(0,0,0,0.05);
+    --active-bg: rgba(0,0,0,0.08);
+    --scrolltrack-bg: rgba(0,0,0,0.04);
+    --card-search-btn-disabled: #b0b0b0;
+  }
 }
 
 html, body {
@@ -69,7 +118,7 @@ html, body {
   font-weight: 600;
   transition: background 0.2s;
 }
-#drop-zone label:hover { background: #c73550; }
+#drop-zone label:hover { background: var(--accent-hover); }
 #drop-zone input[type="file"] { display: none; }
 
 /* ---- Canvas + custom scrollbar ---- */
@@ -93,7 +142,7 @@ html, body {
   right: 0;
   width: var(--scrollbar-w);
   height: 100%;
-  background: rgba(255,255,255,0.03);
+  background: var(--scrolltrack-bg);
   cursor: pointer;
   z-index: 5;
 }
@@ -104,13 +153,13 @@ html, body {
   left: 1px;
   width: calc(var(--scrollbar-w) - 2px);
   min-height: 24px;
-  background: var(--border);
+  background: var(--scrollbar-thumb);
   border-radius: 4px;
   cursor: grab;
   transition: background 0.15s;
 }
 #scrollbar-thumb:hover,
-#scrollbar-thumb.dragging { background: #4a4a6a; }
+#scrollbar-thumb.dragging { background: var(--scrollbar-thumb-hover); }
 #scrollbar-thumb.dragging { cursor: grabbing; }
 
 /* ---- Control Panel ---- */
@@ -127,6 +176,9 @@ html, body {
 #panel-header {
   padding: 16px 20px;
   border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 #panel-header h1 {
@@ -134,12 +186,48 @@ html, body {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex: 1;
+  min-width: 0;
 }
 
 #panel-header h1 span.subtitle {
   font-size: 0.7rem;
   color: var(--text-dim);
   font-weight: normal;
+}
+
+/* ---- Theme toggle ---- */
+#theme-toggle {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px;
+  margin-left: 8px;
+}
+
+#theme-toggle button {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 3px 6px;
+  border-radius: 3px;
+  line-height: 1;
+  transition: background 0.15s, color 0.15s;
+}
+
+#theme-toggle button:hover {
+  color: var(--text);
+}
+
+#theme-toggle button.active {
+  background: var(--accent);
+  color: #fff;
 }
 
 #file-info {
@@ -218,7 +306,7 @@ html, body {
   user-select: none;
   transition: background 0.15s;
 }
-.search-card-header:hover { background: rgba(255,255,255,0.03); }
+.search-card-header:hover { background: var(--hover-bg); }
 
 .search-color-dot {
   width: 10px;
@@ -298,8 +386,8 @@ html, body {
   cursor: pointer;
   transition: background 0.2s;
 }
-.search-card-body .card-search-btn:hover { background: #c73550; }
-.search-card-body .card-search-btn:disabled { background: #555; cursor: not-allowed; }
+.search-card-body .card-search-btn:hover { background: var(--accent-hover); }
+.search-card-body .card-search-btn:disabled { background: var(--card-search-btn-disabled); cursor: not-allowed; }
 
 .search-card-body .card-progress {
   display: none;
@@ -335,15 +423,15 @@ html, body {
 .search-card-results li {
   padding: 6px 0;
   cursor: pointer;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  border-bottom: 1px solid var(--hover-bg-strong);
   transition: background 0.1s;
   font-size: 0.85rem;
 }
 
-.search-card-results li:hover { background: rgba(255,255,255,0.04); }
+.search-card-results li:hover { background: var(--hover-bg-strong); }
 
 .search-card-results li.active {
-  background: rgba(255,255,255,0.08);
+  background: var(--active-bg);
 }
 
 .search-card-results li .result-word {
@@ -364,4 +452,4 @@ html, body {
 #searches-area::-webkit-scrollbar-track,
 .search-card-results::-webkit-scrollbar-track { background: transparent; }
 #searches-area::-webkit-scrollbar-thumb,
-.search-card-results::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.search-card-results::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
