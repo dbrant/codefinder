@@ -180,7 +180,7 @@ a:hover { text-decoration: underline; }
   padding: 16px 20px;
   border-bottom: 1px solid var(--border);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
 }
 
@@ -218,7 +218,7 @@ a:hover { text-decoration: underline; }
   color: var(--text-dim);
   cursor: pointer;
   font-size: 0.85rem;
-  padding: 3px 6px;
+  padding: 3px 4px;
   border-radius: 3px;
   line-height: 1;
   transition: background 0.15s, color 0.15s;
