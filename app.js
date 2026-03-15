@@ -657,6 +657,7 @@
     if (points.length < 2) return;
 
     const hw = cellWidth / 2;
+    const qw = cellWidth / 4;
     const hh = rowHeight / 2;
 
     // Draw connecting lines clipped to rectangle edges
@@ -692,10 +693,10 @@
     for (const p of points) {
       if (p.y >= -rowHeight && p.y <= viewH + rowHeight) {
         ctx.strokeRect(
-          p.x - hw + 0.5,
-          p.y - hh + 0.5,
-          cellWidth - 1,
-          rowHeight - 1
+          p.x - hw - qw,
+          p.y - hh,
+          cellWidth + hw,
+          rowHeight
         );
       }
     }
@@ -736,6 +737,7 @@
     const hasHighlight = highlightMap.size > 0;
     const gridTextColor = getGridTextColor();
     const bgColor = getBgColor();
+    const qw = cellWidth / 4;
 
     // Fill background (needed for light mode)
     ctx.fillStyle = bgColor;
@@ -758,7 +760,7 @@
         if (hlColor) {
           const bgY = row * rowHeight - scrollPx;
           ctx.fillStyle = hlColor.bg;
-          ctx.fillRect(x, bgY, cellWidth, rowHeight);
+          ctx.fillRect(x - qw, bgY, cellWidth + 2 * qw, rowHeight);
           ctx.fillStyle = hlColor.text;
           ctx.font = `bold ${FONT_SIZE}px ${FONT_FAMILY}`;
           ctx.fillText(originalChars[i], x, y);
